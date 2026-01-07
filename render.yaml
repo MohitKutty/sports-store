@@ -2,5 +2,5 @@ services:
   - type: web
     name: sports-store
     env: python
-    buildCommandL pip instaill -r requirements.txt
-    startCommand: gunicorn app:app
+    buildCommandL pip install -r requirements.txt
+    startCommand: gunicorn app:app. --bind 0.0.0.0:$PORT
