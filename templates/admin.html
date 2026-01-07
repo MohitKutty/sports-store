@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="navbar">
+    <h2>🏆 Admin Panel</h2>
+    <nav>
+        <a href="/products">Store</a>
+        <a href="/admin/logout">Logout</a>
+    </nav>
+</header>
+
+<h1 class="page-title">Manage Products</h1>
+
+<form action="/admin/add" method="POST" style="max-width:400px;margin:20px auto;">
+    <input type="name" placeholder="Product Name" required><br><br>
+    <input type="price" type="number" placeholder="Price" required><br><br>
+    <input type="category" placeholder="Category" required><br><br>
+    <input type="image" placeholder="Image filename ( e.g. ball.jpeg)" required><br><br>
+    <button type="submit">Add Product</button>
+</form>
+
+<div class="product-grid">
+    {% for p in products %}
+        <div class="card">
+            <img src="{{ url_for('static', filename='images/' + p['image']) }}">
+            <h3>{{ p['name'] }}</h3>
+            <p>₹{{ p['price'] }}</p>
+            <a class="btn-cart" href="/admin/edit/{{ p['id'] }}">Edit</a>
+            <a class="btn-cart" href="/admin/delete/{{ p['id'] }}">Delete</a>
+        </div>
+    {% endfor %}
+</div>
+
+</body>
+</html>

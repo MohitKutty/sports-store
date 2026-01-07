@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: sports-store
+    env: python
+    buildCommandL pip instaill -r requirements.txt
+    startCommand: gunicorn app:app

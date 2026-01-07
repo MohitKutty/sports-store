@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Products</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="navbar">
+    <h2>🏆 SportsStore</h2>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/products">Products</a>
+        <a href="/cart">Cart</a>
+        <a href="/contact">Contact</a>
+    </nav>
+</header>
+
+<h1 class="page-title">Our Products</h1>
+
+<div class="product-grid">
+
+    {% for item in products %}
+        <div class="card">
+            <img src="{{ url_for('static', filename='images/' + item.image) }}" alt="{{ item.name }}">
+            <h3>{{ item.name }}</h3>
+            <p class="category">{{ item.category }}</p>
+            <p class="price">₹{{ item.price }}</p>
+            <a class="btn-cart" href="/add_to_cart/{{ item.name }}">Add to Cart</a>
+        </div>
+    {% endfor %}
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,221 @@
+import sqlite3
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "sports_store.db")
+
+from flask import request
+from flask import Flask, render_template, session, redirect, url_for, request
+
+app = Flask(__name__)
+app.secret_key = "sportsstore_secret"
+
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "admin123"
+
+def get_products():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM products")
+    products = cursor.fetchall()
+    conn.close()
+    return products
+
+products = [
+    {"name": "Football", "price": 499, "category": "Outdoor", "image": "football.jpeg"},
+    {"name": "Cricket Bat", "price": 1299, "category": "Outdoor", "image": "cricket_bat.jpeg"},
+    {"name": "Tennis Racket", "price": 999, "category": "Indoor", "image": "tennis_racket.jpeg"},
+    {"name": "Dumbbells", "price": 999, "category": "Fitness", "image": "dumbbells.jpeg"},
+    {"name": "Yoga Mat", "price": 699, "category": "Fitness", "image": "yoga_mat.jpeg"},
+]
+
+@app.route("/whoami")
+def whoami():
+    return "THIS IS THE REAL APP.PY"
+
+@app.route("/")
+def home():
+    return render_template("index.html")
+
+@app.route("/products")
+def product_page():
+    products = get_products()
+    return render_template("products.html", products=products)
+
+@app.route("/contact")
+def contact():
+    return render_template("contact.html")
+
+@app.route("/add_to_cart/<product_name>")
+def add_to_cart(product_name):
+    cart = session.get("cart")
+
+    # SAFETY: migrate old list-based cart to dict
+    if isinstance(cart, list):
+        new_cart = {}
+        for item in cart:
+            new_cart[item] = new_cart.get(item, 0) + 1
+        cart = new_cart
+
+    if cart is None:
+        cart = {}
+
+    cart[product_name] = cart.get(product_name, 0) + 1
+
+    session["cart"] = cart
+    session.modified = True
+
+    return redirect(url_for("product_page"))
+
+@app.route("/remove_from_cart/<product_name>")
+def remove_from_cart(product_name):
+    cart = session.get("cart", {})
+
+    if product_name in cart:
+        del cart[product_name]
+
+    session["cart"] = cart
+    session.modified = True
+
+    return redirect(url_for("cart"))
+
+@app.route("/cart")
+def cart():
+    cart = session.get("cart", {})
+
+    # SAFETY: migrate old list-based cart to dict
+    if isinstance(cart, list):
+        new_cart = {}
+        for item in cart:
+            new_cart[item] = new_cart.get(item, 0) + 1
+        session["cart"] = new_cart
+        cart = new_cart
+
+    cart_products = []
+    total = 0
+
+    for name, qty in cart.items():
+        for product in get_products():
+            if product["name"] == name:
+                product_copy = product.copy()
+                product_copy["qty"] = qty
+                product_copy["subtotal"] = qty * product["price"]
+                total += product_copy["subtotal"]
+                cart_products.append(product_copy)
+
+    return render_template(
+        "cart.html",
+        cart_products=cart_products,
+        total=total
+    )
+
+@app.route("/admin")
+def admin():
+    if not admin_required():
+        return redirect(url_for("admin_login"))
+    
+    products = get_products()
+    return render_template("admin.html", products=products)
+
+@app.route("/admin/add", methods=["POST"])
+def admin_add():
+    if not admin_required():
+        return redirect(url_for("admin_login"))
+    
+    name = request.form["name"]
+    price = request.form["price"]
+    category = request.form["category"]
+    image = request.form["image"]
+
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO products (name, price, category, image) VALUES (?, ?, ?, ?)", 
+        (name, price, category, image)
+    )
+    conn.commit()
+    conn.close()
+    
+    return redirect(url_for("admin"))
+
+@app.route("/admin/delete/<int:product_id>")
+def admin_delete(product_id):
+    if not admin_required():
+        return redirect(url_for("admin_login"))
+    
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM products WHERE id = ?", (product_id,))
+    conn.commit()
+    conn.close()
+    
+    return redirect(url_for("admin"))
+
+@app.route("/admin/edit/<int:product_id>")
+def admin_edit(product_id):
+    if not admin_required():
+        return redirect(url_for("admin_login"))
+    
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT * FROM products WHERE id = ?", (product_id,))
+    product = cursor.fetchone()
+   
+    conn.close()
+    
+    return render_template("admin_edit.html", product=product)
+
+@app.route("/admin/update/<int:product_id>", methods=["POST"])
+def admin_update(product_id):
+    if not admin_required():
+        return redirect(url_for("admin_login"))
+    
+    name = request.form.get("name")
+    price = request.form.get("price")
+    category = request.form.get("category")
+    image = request.form.get("image")
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    # 🔒 If image is empty, keep existing one
+    if not image:
+        cursor.execute("SELECT image FROM products WHERE id = ?", (product_id,))
+        image = cursor.fetchone()["image"]
+
+    sql = "UPDATE products SET name = ?, price = ?, category = ?, image = ? WHERE id = ?"
+    cursor.execute(sql, (name, price, category, image, product_id))
+
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for("admin"))
+
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session["admin"] = True
+            return redirect(url_for("admin"))
+        else:
+            return render_template("admin_login.html", error="Invalid credentials")
+    
+    return render_template("admin_login.html")
+
+@app.route("/admin/logout")
+def admin_logout():
+    session.pop("admin", None)
+    return redirect(url_for("home"))
+
+def admin_required():
+    return session.get("admin") is True
+
+if __name__ == "__main__":
+    app.run(debug=True)
