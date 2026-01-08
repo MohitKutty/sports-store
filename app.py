@@ -8,10 +8,10 @@ from flask import request
 from flask import Flask, render_template, session, redirect, url_for, request
 
 app = Flask(__name__)
-app.secret_key = "sportsstore_secret"
+app.secret_key = os.environ.get("SECRET_KEY", "dev_fallback_secret")
 
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "admin123"
+ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "password")
 
 def get_products():
     conn = sqlite3.connect(DB_PATH)
@@ -29,10 +29,6 @@ products = [
     {"name": "Dumbbells", "price": 999, "category": "Fitness", "image": "dumbbells.jpeg"},
     {"name": "Yoga Mat", "price": 699, "category": "Fitness", "image": "yoga_mat.jpeg"},
 ]
-
-@app.route("/whoami")
-def whoami():
-    return "THIS IS THE REAL APP.PY"
 
 @app.route("/")
 def home():
