@@ -1,6 +1,9 @@
 import sqlite3
 import os
 
+from functools import wraps
+from flask import request
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "sports_store.db")
 
@@ -107,6 +110,7 @@ def cart():
     )
 
 @app.route("/admin")
+@admin_required
 def admin():
     if not admin_required():
         return redirect(url_for("admin_login"))
@@ -115,6 +119,7 @@ def admin():
     return render_template("admin.html", products=products)
 
 @app.route("/admin/add", methods=["POST"])
+@admin_required
 def admin_add():
     if not admin_required():
         return redirect(url_for("admin_login"))
@@ -136,6 +141,7 @@ def admin_add():
     return redirect(url_for("admin"))
 
 @app.route("/admin/delete/<int:product_id>")
+@admin_required
 def admin_delete(product_id):
     if not admin_required():
         return redirect(url_for("admin_login"))
@@ -149,6 +155,7 @@ def admin_delete(product_id):
     return redirect(url_for("admin"))
 
 @app.route("/admin/edit/<int:product_id>")
+@admin_required
 def admin_edit(product_id):
     if not admin_required():
         return redirect(url_for("admin_login"))
@@ -207,11 +214,19 @@ def admin_login():
 
 @app.route("/admin/logout")
 def admin_logout():
-    session.pop("admin", None)
+    session.clear()
     return redirect(url_for("home"))
 
 def admin_required():
     return session.get("admin") is True
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get("admin"):
+            return redirect(url_for("admin_login", next=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
 
 if __name__ == "__main__":
     app.run(debug=True)
