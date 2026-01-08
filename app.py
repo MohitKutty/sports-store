@@ -3,6 +3,7 @@ import os
 
 from functools import wraps
 from flask import request
+from flask import flash
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "sports_store.db")
@@ -17,8 +18,7 @@ ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "password")
 
 def get_products():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM products")
     products = cursor.fetchall()
@@ -129,7 +129,7 @@ def admin_add():
     category = request.form["category"]
     image = request.form["image"]
 
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db()
     cursor = conn.cursor()
     cursor.execute(
         "INSERT INTO products (name, price, category, image) VALUES (?, ?, ?, ?)", 
@@ -138,6 +138,7 @@ def admin_add():
     conn.commit()
     conn.close()
     
+    flash("Product added successfully!", "success")
     return redirect(url_for("admin"))
 
 @app.route("/admin/delete/<int:product_id>")
@@ -146,12 +147,13 @@ def admin_delete(product_id):
     if not admin_required():
         return redirect(url_for("admin_login"))
     
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM products WHERE id = ?", (product_id,))
     conn.commit()
     conn.close()
     
+    flash("Product deleted" "warning")
     return redirect(url_for("admin"))
 
 @app.route("/admin/edit/<int:product_id>")
@@ -160,7 +162,7 @@ def admin_edit(product_id):
     if not admin_required():
         return redirect(url_for("admin_login"))
     
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db()
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     
@@ -181,7 +183,7 @@ def admin_update(product_id):
     category = request.form.get("category")
     image = request.form.get("image")
 
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
@@ -196,6 +198,7 @@ def admin_update(product_id):
     conn.commit()
     conn.close()
 
+    flash("Product updated successfully!", "info")
     return redirect(url_for("admin"))
 
 @app.route("/admin/login", methods=["GET", "POST"])
