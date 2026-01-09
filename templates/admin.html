@@ -14,6 +14,17 @@
     </nav>
 </header>
 
+<!-- 🔽 FLASH MESSAGES GO HERE -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div style="max-width:400px;margin:20px auto;">
+      {% for category, message in messages %}
+        <div class="flash-message {{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
 <h1 class="page-title">Manage Products</h1>
 
 <form action="/admin/add" method="POST" style="max-width:400px;margin:20px auto;">
@@ -21,6 +32,7 @@
     <input type="price" type="number" placeholder="Price" required><br><br>
     <input type="category" placeholder="Category" required><br><br>
     <input type="image" placeholder="Image filename ( e.g. ball.jpeg)" required><br><br>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button type="submit">Add Product</button>
 </form>
 

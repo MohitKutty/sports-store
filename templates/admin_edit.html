@@ -20,6 +20,7 @@
     <input type="price" name="price" type="number" value="{{ product['price'] }}" required><br><br>
     <input type="category" name="category" value="{{ product['category'] }}" required><br><br>
     <input type="image" name="image" value="{{ product['image'] }}" required><br><br>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     
     <button type="submit">Update Product</button>
 </form>

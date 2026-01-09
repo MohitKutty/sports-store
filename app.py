@@ -19,6 +19,15 @@ from flask import (
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev_fallback_secret")
 
+import secrets
+
+def generate_csrf_token():
+    if '_csrf_token' not in session:
+        session['_csrf_token'] = secrets.token_hex(16)
+    return session['_csrf_token']
+
+app.jinja_env.globals['csrf_token'] = generate_csrf_token
+
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "password")
 
@@ -41,6 +50,11 @@ def get_products():
     products = cursor.fetchall()
     conn.close()
     return products
+
+def verify_csrf():
+    session_token = session.get("_csrf_token")
+    form_token = request.form.get("csrf_token")
+    return bool(session_token and form_token and session_token == form_token)
 
 # --------------------------------------------------
 # Admin Decorator (DEFINE BEFORE ROUTES)
@@ -165,8 +179,10 @@ def admin():
 @app.route("/admin/add", methods=["POST"])
 @admin_required
 def admin_add():
-    if not admin_required():
-        return redirect(url_for("admin_login"))
+    
+    if not verify_csrf():
+        flash("Invalid CSRF token", "danger")
+        return redirect(url_for("admin"))
     
     name = request.form.get("name", "").strip()
     price = request.form.get("price", "").strip()
@@ -224,8 +240,10 @@ def admin_edit(product_id):
 
 @app.route("/admin/update/<int:product_id>", methods=["POST"])
 def admin_update(product_id):
-    if not admin_required():
-        return redirect(url_for("admin_login"))
+    
+    if not verify_csrf():
+        flash("Invalid CSRF token", "danger")
+        return redirect(url_for("admin"))
     
     name = request.form.get("name", "").strip()
     price = request.form.get("price", "").strip()
