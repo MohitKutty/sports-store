@@ -63,7 +63,7 @@ def verify_csrf():
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not session.get("admin_logged_in"):
+        if not session.get("admin"):
             return redirect(url_for("admin_login"))
         return f(*args, **kwargs)
     return decorated_function
@@ -93,8 +93,20 @@ def home():
 
 @app.route("/products")
 def product_page():
-    products = get_products()
-    return render_template("products.html", products=products)
+    query = request.args.get("q", "").strip()
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    if query:
+        cursor.execute("SELECT * FROM products WHERE name LIKE ?", (f"%{query}%",))
+    else:
+        cursor.execute("SELECT * FROM products")
+        
+    products = cursor.fetchall()
+    conn.close()
+    
+    return render_template("products.html", products=products, query=query)
 
 @app.route("/contact")
 def contact():
@@ -170,8 +182,6 @@ def cart():
 @app.route("/admin")
 @admin_required
 def admin():
-    if not admin_required():
-        return redirect(url_for("admin_login"))
     
     products = get_products()
     return render_template("admin.html", products=products)
