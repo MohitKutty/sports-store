@@ -1,21 +1,38 @@
+# imports
 import sqlite3
 import os
-
 from functools import wraps
-from flask import request
-from flask import flash
+from flask import {
+    Flask,
+    render_template,
+    session,
+    redirect,
+    url_for,
+    request,
+    flash
+}
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "sports_store.db")
-
-from flask import request
-from flask import Flask, render_template, session, redirect, url_for, request
+# --------------------------------------------------
+# App & Config
+# --------------------------------------------------
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev_fallback_secret")
 
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "password")
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "sports_store.db")
+
+#--------------------------------------------------
+# Database Helpers
+#--------------------------------------------------
+
+def get_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 def get_products():
     conn = get_db()
@@ -25,13 +42,21 @@ def get_products():
     conn.close()
     return products
 
-products = [
-    {"name": "Football", "price": 499, "category": "Outdoor", "image": "football.jpeg"},
-    {"name": "Cricket Bat", "price": 1299, "category": "Outdoor", "image": "cricket_bat.jpeg"},
-    {"name": "Tennis Racket", "price": 999, "category": "Indoor", "image": "tennis_racket.jpeg"},
-    {"name": "Dumbbells", "price": 999, "category": "Fitness", "image": "dumbbells.jpeg"},
-    {"name": "Yoga Mat", "price": 699, "category": "Fitness", "image": "yoga_mat.jpeg"},
-]
+# --------------------------------------------------
+# Admin Decorator (DEFINE BEFORE ROUTES)
+# --------------------------------------------------
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get("admin_logged_in"):
+            return redirect(url_for("admin_login"))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# --------------------------------------------------
+# Public Routes
+# --------------------------------------------------
 
 @app.route("/")
 def home():
@@ -45,6 +70,10 @@ def product_page():
 @app.route("/contact")
 def contact():
     return render_template("contact.html")
+
+# --------------------------------------------------
+# Cart Routes
+# --------------------------------------------------
 
 @app.route("/add_to_cart/<product_name>")
 def add_to_cart(product_name):
@@ -103,11 +132,11 @@ def cart():
                 total += product_copy["subtotal"]
                 cart_products.append(product_copy)
 
-    return render_template(
-        "cart.html",
-        cart_products=cart_products,
-        total=total
-    )
+    return render_template("cart.html", cart_products=cart_products, total=total)
+
+# --------------------------------------------------
+# Admin Routes
+# --------------------------------------------------
 
 @app.route("/admin")
 @admin_required
@@ -201,6 +230,10 @@ def admin_update(product_id):
     flash("Product updated successfully!", "info")
     return redirect(url_for("admin"))
 
+# --------------------------------------------------
+# Auth Routes
+# --------------------------------------------------
+
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
     if request.method == "POST":
@@ -220,16 +253,9 @@ def admin_logout():
     session.clear()
     return redirect(url_for("home"))
 
-def admin_required():
-    return session.get("admin") is True
-
-def admin_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not session.get("admin"):
-            return redirect(url_for("admin_login", next=request.url))
-        return f(*args, **kwargs)
-    return decorated_function
+# --------------------------------------------------
+# Run (local only)
+# --------------------------------------------------
 
 if __name__ == "__main__":
     app.run(debug=True)
