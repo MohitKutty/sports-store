@@ -2,7 +2,7 @@
 import sqlite3
 import os
 from functools import wraps
-from flask import {
+from flask import (
     Flask,
     render_template,
     session,
@@ -10,7 +10,7 @@ from flask import {
     url_for,
     request,
     flash
-}
+)
 
 # --------------------------------------------------
 # App & Config
