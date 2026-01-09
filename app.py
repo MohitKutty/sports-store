@@ -126,7 +126,7 @@ def cart():
     for name, qty in cart.items():
         for product in get_products():
             if product["name"] == name:
-                product_copy = product.copy()
+                product_copy = dict(product)
                 product_copy["qty"] = qty
                 product_copy["subtotal"] = qty * product["price"]
                 total += product_copy["subtotal"]
