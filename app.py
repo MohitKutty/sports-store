@@ -54,6 +54,21 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def validate_product_form(name, price, category, image):
+    if not name or not price or not category or not image:
+        return "All fields are required."
+    try:
+        price=float(price)
+        if price <= 0:
+           return "Price must be greater than zero."
+    except ValueError:
+        return "Price must be a number."
+    
+    if not image.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
+        return "Invalid image format."
+    
+    return None
+
 # --------------------------------------------------
 # Public Routes
 # --------------------------------------------------
@@ -153,10 +168,15 @@ def admin_add():
     if not admin_required():
         return redirect(url_for("admin_login"))
     
-    name = request.form["name"]
-    price = request.form["price"]
-    category = request.form["category"]
-    image = request.form["image"]
+    name = request.form.get("name", "").strip()
+    price = request.form.get("price", "").strip()
+    category = request.form.get("category", "").strip()
+    image = request.form.get("image", "").strip()
+
+    error = validate_product_form(name, price, category, image)
+    if error:
+        flash(error, "error")
+        return redirect(url_for("admin"))
 
     conn = get_db()
     cursor = conn.cursor()
@@ -207,10 +227,16 @@ def admin_update(product_id):
     if not admin_required():
         return redirect(url_for("admin_login"))
     
-    name = request.form.get("name")
-    price = request.form.get("price")
-    category = request.form.get("category")
-    image = request.form.get("image")
+    name = request.form.get("name", "").strip()
+    price = request.form.get("price", "").strip()
+    category = request.form.get("category", "").strip()
+    image = request.form.get("image", "").strip()
+    
+    if image:
+        error = validate_product_form(name, price, category, image)
+        if error:
+            flash(error, "error")
+            return redirect(url_for("admin"))
 
     conn = get_db(DB_PATH)
     conn.row_factory = sqlite3.Row
