@@ -18,6 +18,28 @@
 
 <h1 class="page-title">Our Products</h1>
 
+<form method="GET" action="/products" class="search-form">
+   <input
+    type="text"
+    name="search"
+    placeholder="Search products..."
+    value="{{ query }}"
+    >
+    <button type="submit">Search</button>
+</form>
+   
+<form method="GET" action="/products" class="filter-form">
+   <select name="category">
+       <option value="">All Categories</option>
+       <option value="Outdoor" {% if category == "Outdoor" %}selected{% endif %}>Outdoor</option>
+       <option value="Indoor" {% if category == "Indoor" %}selected{% endif %}>Indoor</option>
+       <option value="Fitness" {% if category == "Fitness" %}selected{% endif %}>Fitness</option>
+   </select>
+
+   <input type="hidden" name="q" value="{{ query }}">
+   <button type="submit">Filter</button>
+</form>
+
 <div class="product-grid">
 
     {% for item in products %}

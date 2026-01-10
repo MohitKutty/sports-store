@@ -94,19 +94,27 @@ def home():
 @app.route("/products")
 def product_page():
     query = request.args.get("q", "").strip()
+    category = request.args.get("category", "").strip()
     
     conn = get_db()
     cursor = conn.cursor()
     
+    sql = "SELECT * FROM products WHERE 1=1"
+    params = []
+    
     if query:
-        cursor.execute("SELECT * FROM products WHERE name LIKE ?", (f"%{query}%",))
-    else:
-        cursor.execute("SELECT * FROM products")
-        
+        sql += " AND name LIKE ?"
+        params.append(f"%{query}%")
+    
+    if category:
+        sql += " AND category = ?"
+        params.append(category)
+    
+    cursor.execute(sql, params)
     products = cursor.fetchall()
     conn.close()
-    
-    return render_template("products.html", products=products, query=query)
+
+    return render_template("products.html", products=products, query=query, category=category)
 
 @app.route("/contact")
 def contact():
