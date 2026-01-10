@@ -28,9 +28,6 @@ def generate_csrf_token():
 
 app.jinja_env.globals['csrf_token'] = generate_csrf_token
 
-ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "password")
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "sports_store.db")
 
@@ -56,6 +53,14 @@ def verify_csrf():
     form_token = request.form.get("csrf_token")
     return bool(session_token and form_token and session_token == form_token)
 
+from werkzeug.security import generate_password_hash, check_password_hash
+
+def hash_password(password: str) -> str:
+    return generate_password_hash(password)
+
+def verify_password(password: str, password_hash: str) -> bool:
+    return check_password_hash(password_hash, password)
+
 # --------------------------------------------------
 # Admin Decorator (DEFINE BEFORE ROUTES)
 # --------------------------------------------------
@@ -63,7 +68,7 @@ def verify_csrf():
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not session.get("admin"):
+        if not session.get("admin_logged_in"):
             return redirect(url_for("admin_login"))
         return f(*args, **kwargs)
     return decorated_function
@@ -227,8 +232,6 @@ def admin_add():
 @app.route("/admin/delete/<int:product_id>")
 @admin_required
 def admin_delete(product_id):
-    if not admin_required():
-        return redirect(url_for("admin_login"))
     
     conn = get_db()
     cursor = conn.cursor()
@@ -236,7 +239,7 @@ def admin_delete(product_id):
     conn.commit()
     conn.close()
     
-    flash("Product deleted" "warning")
+    flash("Product deleted", "warning")
     return redirect(url_for("admin"))
 
 @app.route("/admin/edit/<int:product_id>")
@@ -274,7 +277,7 @@ def admin_update(product_id):
             flash(error, "error")
             return redirect(url_for("admin"))
 
-    conn = get_db(DB_PATH)
+    conn = get_db()
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
@@ -299,16 +302,63 @@ def admin_update(product_id):
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
     if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
 
-        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-            session["admin"] = True
-            return redirect(url_for("admin"))
-        else:
-            return render_template("admin_login.html", error="Invalid credentials")
+        if not username or not password:
+            flash("Username and password are required", "danger")
+            return redirect(url_for("admin_login"))
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT password_hash FROM users WHERE username = ?", 
+            (username,)
+        )
+        user = cursor.fetchone()
+        conn.close()
+        
+        if not user or not verify_password(password, user["password_hash"]):
+            flash("Invalid username or password", "danger")
+            return redirect(url_for("admin_login"))
+        
+        session["admin_logged_in"] = True
+        return redirect(url_for("admin"))
     
     return render_template("admin_login.html")
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
+        
+        if not username or not password:
+            flash("Username and password are required.", "danger")
+            return redirect(url_for("register"))
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+        if cursor.fetchone():
+            conn.close()
+            flash("Username already exists.", "danger")
+            return redirect(url_for("register"))
+        
+        password_hash = hash_password(password)
+        
+        cursor.execute(
+            "INSERT INTO users (username, password_hash) VALUES (?, ?)", 
+            (username, password_hash)
+        )
+        conn.commit()
+        conn.close()
+        
+        flash("Account created successfully. Please log in.", "success")
+        return redirect(url_for("admin_login"))
+    
+    return render_template("register.html")
 
 @app.route("/admin/logout")
 def admin_logout():
@@ -320,4 +370,4 @@ def admin_logout():
 # --------------------------------------------------
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
