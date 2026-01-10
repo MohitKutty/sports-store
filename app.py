@@ -40,6 +40,31 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
+def init_db():
+    conn = get_db()
+    cursor = conn.cursor()
+   
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS products (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            price REAL NOT NULL,
+            category TEXT NOT NULL,
+            image TEXT NOT NULL
+        )
+""")
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
+            password_hash TEXT NOT NULL
+        )
+    """)
+    
+    conn.commit()
+    conn.close()
+
 def get_products():
     conn = get_db()
     cursor = conn.cursor()
@@ -61,6 +86,9 @@ def hash_password(password: str) -> str:
 def verify_password(password: str, password_hash: str) -> bool:
     return check_password_hash(password_hash, password)
 
+with app.app_context():
+    init_db()
+    
 # --------------------------------------------------
 # Admin Decorator (DEFINE BEFORE ROUTES)
 # --------------------------------------------------
