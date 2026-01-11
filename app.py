@@ -19,6 +19,8 @@ from flask import (
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev_fallback_secret")
 
+init_db()
+
 import secrets
 
 def generate_csrf_token():
@@ -41,6 +43,7 @@ def get_db():
     return conn
 
 def init_db():
+    print("INIT_DB: starting")
     conn = get_db()
     cursor = conn.cursor()
    
@@ -52,18 +55,30 @@ def init_db():
             category TEXT NOT NULL,
             image TEXT NOT NULL
         )
-""")
+   """)
 
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL UNIQUE,
-            password_hash TEXT NOT NULL
-        )
-    """)
+    cursor.execute("SELECT COUNT(*) FROM products")
+    count = cursor.fetchone()[0]
+    
+    print("INIT_DB: product count=", count)
+      
+    if count == 0:
+        cursor.executemany("""
+            INSERT INTO products (name, price, category, image)
+            VALUES (?, ?, ?, ?)
+       """, [
+            ("Football", 499, "Outdoor", "football.jpeg"),
+            ("Cricket Bat", 1299, "Outdoor", "cricket_bat.jpeg"),
+            ("Tennis Racket", 999, "Indoor", "tennis_racket.jpeg"),
+            ("Dumbbells", 999, "Fitness", "dumbbells.jpeg"),
+            ("Yoga Mat", 699, "Fitness", "yoga_mat.jpeg")   
+       ])
+       
+       print("INIT_DB: products inserted")
     
     conn.commit()
     conn.close()
+    print("INIT_DB: products inserted")
 
 def get_products():
     conn = get_db()
@@ -89,6 +104,30 @@ def verify_password(password: str, password_hash: str) -> bool:
 with app.app_context():
     init_db()
     
+def seed_products():
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT COUNT(*) FROM products")
+    count = cursor.fetchone()[0]
+    
+    if count == 0:
+        cursor.executemany(
+            "INSERT INTO products (name, price, category, image) VALUES (?, ?, ?, ?)",
+            [
+                ("Football", 499, "Outdoor", "football.jpeg"),
+                ("Basketball", 1299, "Outdoor", "basketball.jpeg"),
+                ("Tennis Racket", 999, "Indoor", "tennis_racket.jpeg"),
+                ("Dumbbells", 999, "Fitness", "dumbbells.jpeg"),
+                ("Yoga Mat", 699, "Fitness", "yoga_mat.jpeg"),
+            ]
+        )
+    with app.app_context():
+        init_db()
+        seed_products()
+    
+    conn.commit()
+    conn.close()
 # --------------------------------------------------
 # Admin Decorator (DEFINE BEFORE ROUTES)
 # --------------------------------------------------
