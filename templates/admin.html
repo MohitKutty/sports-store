@@ -17,36 +17,47 @@
 <!-- 🔽 FLASH MESSAGES GO HERE -->
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
-    <div style="max-width:400px;margin:20px auto;">
       {% for category, message in messages %}
-        <div class="flash-message {{ category }}">{{ message }}</div>
+        <div class="flash{{ category }}">{{ message }}</div>
       {% endfor %}
     </div>
   {% endif %}
 {% endwith %}
 
+<div class="container admin-container">
+
 <h1 class="page-title">Manage Products</h1>
 
-<form action="/admin/add" method="POST" style="max-width:400px;margin:20px auto;">
-    <input type="name" placeholder="Product Name" required><br><br>
-    <input type="price" type="number" placeholder="Price" required><br><br>
-    <input type="category" placeholder="Category" required><br><br>
-    <input type="image" placeholder="Image filename ( e.g. ball.jpeg)" required><br><br>
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="admin-card">
+  <h2>Add Product</h2>
+  <form action="/admin/add" method="POST">
+    <input name="name" placeholder="Product Name" required><br><br>
+    <input name="price" type="number" placeholder="Price" required><br><br>
+    <input name="category" placeholder="Category" required><br><br>
+    <input name="image" placeholder="Image filename ( e.g. ball.jpeg)" required><br><br>
+    <input name="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button type="submit">Add Product</button>
-</form>
+  </form>
+</div>
 
+<h2 class="section-title">Existing Products</h2>
+<p class="muted">Total products: {{ products|length }}</p>
 <div class="product-grid">
     {% for p in products %}
         <div class="card">
             <img src="{{ url_for('static', filename='images/' + p['image']) }}">
+            <span class="badge">{{ p['category'] }}</span>
             <h3>{{ p['name'] }}</h3>
             <p>₹{{ p['price'] }}</p>
             <a class="btn-cart" href="/admin/edit/{{ p['id'] }}">Edit</a>
-            <a class="btn-cart" href="/admin/delete/{{ p['id'] }}">Delete</a>
+          <a class="btn-danger" 
+            href="/admin/delete/{{ p['id'] }}"
+            onclick="return confirm('Delete this product permanently?')">
+            Delete
+          </a>
         </div>
     {% endfor %}
 </div>
-
+</div>
 </body>
 </html>
