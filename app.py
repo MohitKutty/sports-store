@@ -1,16 +1,10 @@
 # imports
 import sqlite3
 import os
+import secrets
 from functools import wraps
-from flask import (
-    Flask,
-    render_template,
-    session,
-    redirect,
-    url_for,
-    request,
-    flash
-)
+from flask import Flask,render_template, session, redirect, url_for, request, flash
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # --------------------------------------------------
 # App & Config
@@ -18,54 +12,6 @@ from flask import (
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev_fallback_secret")
-
-def init_db():
-    print("INIT_DB: starting")
-
-    conn = get_db()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS products (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            price REAL NOT NULL,
-            category TEXT NOT NULL,
-            image TEXT NOT NULL
-        )
-    """)
-
-    cursor.execute("SELECT COUNT(*) FROM products")
-    count = cursor.fetchone()[0]
-
-    print("INIT_DB: product count =", count)
-
-    if count == 0:
-        cursor.executemany("""
-            INSERT INTO products (name, price, category, image)
-            VALUES (?, ?, ?, ?)
-        """, [
-            ("Football", 499, "Outdoor", "football.jpeg"),
-            ("Cricket Bat", 1299, "Outdoor", "cricket_bat.jpeg"),
-            ("Tennis Racket", 999, "Indoor", "tennis_racket.jpeg"),
-            ("Dumbbells", 999, "Fitness", "dumbbells.jpeg"),
-            ("Yoga Mat", 699, "Fitness", "yoga_mat.jpeg")
-        ])
-
-        print("INIT_DB: products inserted")
-
-    conn.commit()
-    conn.close()
-    print("INIT_DB: done")
-
-import secrets
-
-def generate_csrf_token():
-    if '_csrf_token' not in session:
-        session['_csrf_token'] = secrets.token_hex(16)
-    return session['_csrf_token']
-
-app.jinja_env.globals['csrf_token'] = generate_csrf_token
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "sports_store.db")
@@ -80,6 +26,8 @@ def get_db():
     return conn
 
 def init_db():
+    print("INIT_DB: starting")
+    
     conn = get_db()
     cursor = conn.cursor()
    
@@ -92,18 +40,12 @@ def init_db():
             image TEXT NOT NULL
         )
    """)
-    
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL
-        )
-    """)
 
     # Seed products ONLY if empty
     cursor.execute("SELECT COUNT(*) FROM products")
     count = cursor.fetchone()[0]
+    
+    print("INIT_DB: product count =", count)
       
     if count == 0:
         cursor.executemany("""
@@ -116,9 +58,11 @@ def init_db():
             ("Dumbbells", 999, "Fitness", "dumbbells.jpeg"),
             ("Yoga Mat", 699, "Fitness", "yoga_mat.jpeg")   
        ])
+    print("INIT_DB: products inserted")
     
     conn.commit()
     conn.close()
+    print("INIT_DB: done")
 
 def get_products():
     conn = get_db()
@@ -128,19 +72,32 @@ def get_products():
     conn.close()
     return products
 
+# --------------------------------------------------
+# Security Helpers (CSRF)
+# --------------------------------------------------
+
+def generate_csrf_token():
+    if "_csrf_token" not in session:
+        session["_csrf_token"] = secrets.token_hex[16]
+    return session["_csrf_token"]    
+
+app.jinja_env.globals["csrf_token"] = generate_csrf_token
+
 def verify_csrf():
     session_token = session.get("_csrf_token")
     form_token = request.form.get("csrf_token")
     return bool(session_token and form_token and session_token == form_token)
 
-from werkzeug.security import generate_password_hash, check_password_hash
+# --------------------------------------------------
+# Security Helpers (Passwords / Auth)
+# --------------------------------------------------
 
 def hash_password(password: str) -> str:
     return generate_password_hash(password)
 
 def verify_password(password: str, password_hash: str) -> bool:
     return check_password_hash(password_hash, password)
-    
+
 # --------------------------------------------------
 # Admin Decorator (DEFINE BEFORE ROUTES)
 # --------------------------------------------------
