@@ -19,7 +19,44 @@ from flask import (
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev_fallback_secret")
 
-init_db()
+def init_db():
+    print("INIT_DB: starting")
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS products (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            price REAL NOT NULL,
+            category TEXT NOT NULL,
+            image TEXT NOT NULL
+        )
+    """)
+
+    cursor.execute("SELECT COUNT(*) FROM products")
+    count = cursor.fetchone()[0]
+
+    print("INIT_DB: product count =", count)
+
+    if count == 0:
+        cursor.executemany("""
+            INSERT INTO products (name, price, category, image)
+            VALUES (?, ?, ?, ?)
+        """, [
+            ("Football", 499, "Outdoor", "football.jpeg"),
+            ("Cricket Bat", 1299, "Outdoor", "cricket_bat.jpeg"),
+            ("Tennis Racket", 999, "Indoor", "tennis_racket.jpeg"),
+            ("Dumbbells", 999, "Fitness", "dumbbells.jpeg"),
+            ("Yoga Mat", 699, "Fitness", "yoga_mat.jpeg")
+        ])
+
+        print("INIT_DB: products inserted")
+
+    conn.commit()
+    conn.close()
+    print("INIT_DB: done")
 
 import secrets
 
@@ -74,7 +111,7 @@ def init_db():
             ("Yoga Mat", 699, "Fitness", "yoga_mat.jpeg")   
        ])
        
-       print("INIT_DB: products inserted")
+    print("INIT_DB: products inserted")
     
     conn.commit()
     conn.close()
