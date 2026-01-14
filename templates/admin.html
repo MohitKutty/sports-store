@@ -14,6 +14,10 @@
     </nav>
 </header>
 
+flash("Product added successfully!", "success")
+flash("Product deleted", warning)
+flash("Inavlid input", error)
+
 <!-- 🔽 FLASH MESSAGES GO HERE -->
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
@@ -24,40 +28,51 @@
   {% endif %}
 {% endwith %}
 
-<div class="container admin-container">
+<div class="container admin-layout">
 
-<h1 class="page-title">Manage Products</h1>
-
-<div class="admin-card">
+<section class ="admin-card">
   <h2>Add Product</h2>
+
   <form action="/admin/add" method="POST">
+    <input name="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    
     <input name="name" placeholder="Product Name" required><br><br>
     <input name="price" type="number" placeholder="Price" required><br><br>
     <input name="category" placeholder="Category" required><br><br>
     <input name="image" placeholder="Image filename ( e.g. ball.jpeg)" required><br><br>
-    <input name="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button type="submit">Add Product</button>
+  
+    <button class="btn primary">Add Product</button>
   </form>
-</div>
+</section>
 
-<h2 class="section-title">Existing Products</h2>
+<section class="admin-card">
+<h2>Existing Products</h2>
+
 <p class="muted">Total products: {{ products|length }}</p>
+
 <div class="product-grid">
     {% for p in products %}
-        <div class="card">
-            <img src="{{ url_for('static', filename='images/' + p['image']) }}">
-            <span class="badge">{{ p['category'] }}</span>
+        <div class="card admin-product">
+          <img src="{{ url_for('static', filename='images/' + p.image) }}"
+               oneerror="this.src'/stattic/images/placeholder.png'">
+            
             <h3>{{ p['name'] }}</h3>
-            <p>₹{{ p['price'] }}</p>
-            <a class="btn-cart" href="/admin/edit/{{ p['id'] }}">Edit</a>
-          <a class="btn-danger" 
-            href="/admin/delete/{{ p['id'] }}"
-            onclick="return confirm('Delete this product permanently?')">
-            Delete
-          </a>
-        </div>
-    {% endfor %}
-</div>
+            <p class="price">₹{{ p['price'] }}</p>
+            <p class="muted">{{ p.category }}</p>
+
+            <div class="admin-actions">
+              <a class="btn small" href="/admin/edit/{{ p['id'] }}">Edit</a>
+              <a class="btn danger small" 
+                 href="/admin/delete/{{ p['id'] }}"
+                 onclick="return confirm('Delete this product permanently?')">
+                 Delete
+              </a>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+    
 </div>
 </body>
 </html>
