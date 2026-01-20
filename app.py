@@ -297,6 +297,7 @@ def admin_edit(product_id):
     return render_template("admin_edit.html", product=product)
 
 @app.route("/admin/update/<int:product_id>", methods=["POST"])
+@admin_required
 def admin_update(product_id):
     
     if not verify_csrf():

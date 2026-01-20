@@ -14,15 +14,20 @@
     </nav>
 </header>
 
-flash("Product added successfully!", "success")
-flash("Product deleted", warning)
-flash("Inavlid input", error)
 
 <!-- 🔽 FLASH MESSAGES GO HERE -->
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
+    <div class="container">
       {% for category, message in messages %}
-        <div class="flash{{ category }}">{{ message }}</div>
+        <div class="flash{{ category }}">
+          <span class="flash-icon">
+            {% if category == "success" %}✅{% endif %}
+            {% if category == "error" %}❌{% endif %}
+            {% if category == "warning" %}⚠️{% endif %}
+          </span>
+          {{ message }}
+        </div>
       {% endfor %}
     </div>
   {% endif %}
@@ -30,18 +35,34 @@ flash("Inavlid input", error)
 
 <div class="container admin-layout">
 
-<section class ="admin-card">
+<section class ="admin-card add-product-card">
   <h2>Add Product</h2>
 
-  <form action="/admin/add" method="POST">
-    <input name="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <form action="/admin/add" method="POST" class="admin-form">
     
-    <input name="name" placeholder="Product Name" required><br><br>
-    <input name="price" type="number" placeholder="Price" required><br><br>
-    <input name="category" placeholder="Category" required><br><br>
-    <input name="image" placeholder="Image filename ( e.g. ball.jpeg)" required><br><br>
+  <div class="form-group">
+    <label>Product Name</label>
+    <input name="name" required>
+  </div>
+
+  <div class="form-group">
+    <label>Price</label>
+    <input name="price" type="number" step="0.01" required>
+  </div>
+
+  <div class="form-group">
+    <label>Category</label>
+    <input name="category" required>
+  </div>
+
+  <div class="form-group">
+    <label>Image filename</label>
+    <input name="image" placeholder="e.g. football.jpeg" required>
+  </div>
+
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   
-    <button class="btn primary">Add Product</button>
+  <button type="submit" class="btn">Add Product</button>
   </form>
 </section>
 
@@ -50,29 +71,80 @@ flash("Inavlid input", error)
 
 <p class="muted">Total products: {{ products|length }}</p>
 
-<div class="product-grid">
+<div class="product-grid admin-grid">
     {% for p in products %}
         <div class="card admin-product">
+
           <img src="{{ url_for('static', filename='images/' + p.image) }}"
-               oneerror="this.src'/stattic/images/placeholder.png'">
+               oneerror="this.src'/static/images/placeholder.png'"
+               class="admin-product-img">
             
-            <h3>{{ p['name'] }}</h3>
+            <h3 class="admin-title">{{ p['name'] }}</h3>
             <p class="price">₹{{ p['price'] }}</p>
-            <p class="muted">{{ p.category }}</p>
+            <p class="muted category-text">{{ p.category }}</p>
 
             <div class="admin-actions">
-              <a class="btn small" href="/admin/edit/{{ p['id'] }}">Edit</a>
-              <a class="btn danger small" 
-                 href="/admin/delete/{{ p['id'] }}"
-                 onclick="return confirm('Delete this product permanently?')">
-                 Delete
-              </a>
+              <button class="btn btn-edit" onclick="toggleEdit({{ p['id'] }})">Edit</button>
+              <a class="btn btn-delete" href="/admin/delete/{{ p['id'] }}">Delete</a>
             </div>
+
+            <form method="POST"
+                  action="/admin/update/{{ p['id'] }}"
+                  class="inline-edit"
+                  id="edit-{{ p['id'] }}">
+
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+              <input name="name" value="{{ p['name'] }}" required>
+              <input name="price" type="number" step="0.01" value="{{ p['price']}}" required>
+              <input name="category" value="{{ p['category'] }}" required>
+              <input name="image" value="{{ p['image'] }}">
+            
+              <button type="submit" class="btn">Save</button>
+            </form>
+
           </div>
         {% endfor %}
       </div>
     </section>
     
 </div>
+
+<script>
+  setTimeout(() => {
+    document.querySelectorAll(".flash").forEach(el => {
+      el.style.opacity = "0";
+      el.style.transition = "opacity 0.5s ease";
+      setTimeout(() => el.remove(), 500);
+    });
+  }, 3000);
+</script>
+
+<script>
+function toggleEdit(id) {
+  const form = document.getElementById("edit-" + id);
+  
+  if (form.style.maxHeight) {
+      form.style.maxHeight = null; // collapse
+      form.style.opacity - 0;
+  } else {
+      form.style.maxHeight = form.scrollHeight + "px";
+      form.style.opacity = 1
+  }
+}
+</script>
+
+<script>
+  window.addEventListener("load", () => {
+    document.querySelector(".add-product-card")?.classList.add("loaded");
+  });
+</script>
+
+<script>
+  document.querySelectorAll(".admin-product").forEach((el, i) => {
+    el.style.animationDelay = '${i * 0.08}s' ;
+  });
+</script>
+
 </body>
 </html>
