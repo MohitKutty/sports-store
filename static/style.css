@@ -439,3 +439,119 @@ input:focus {
 .admin-grid.admin-product:nth-child(8) { animation-delay: 0.40s; }
 .admin-grid.admin-product:nth-child(9) { animation-delay: 0.45s; }
 .admin-grid.admin-product:nth-child(10) { animation-delay: 0.50s; }
+
+/* FILTER BAR */
+.filter-bar {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin: 20px 0 30px;
+}
+
+.filter-form {
+    display: flex;
+    gap: 12px;
+    background: white;
+    padding: 14px 20px;
+    border-radius: 10px;
+    box-shadow: 0 4p 12px rgba(0, 0, 0, 0.06);
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-input {
+    padding: 10px 14px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    width: 220px;
+    font-size: 15px;
+}
+
+.filter-select {
+    padding: 10px 14px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+.filter-btn {
+    background: #2563eb;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.reset-btn:hover {
+    background: #e5e7eb;
+}
+
+/* PREMIUM FILTER BAR */
+.filter-bar.premium {
+    display: flex;
+    justify-content: center;
+    margin: 25px 0 35px;
+}
+
+.premium form {
+    background: white;
+    padding: 16px 22px;
+    border-radius: 14px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.premium-form:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
+.premium-input,
+.premium-select {
+   padding: 12px 16px;
+   border-radius: 10px;
+   border: 1px solid #ddd;
+   font-size: 15px;
+   min-width: 200px;
+   transition: all 0.25s ease;
+}
+
+.premium-input:focus,
+.premium-select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 8px rgba(37, 99, 235, 0.25);
+}
+
+.premium-btn {
+    background: #2563eb;
+    color: white;
+    padding: 12px 18px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.25s ease;
+}
+
+.premium-btn:hover {
+    background: #1e40af;
+}
+
+.premium-reset {
+    background: #f3f4f6;
+    padding: 12px 18px;
+    border-radius: 10px;
+    color: #111;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.premium-reset:hover {
+    background: #e5e7eb;
+}

@@ -21,18 +21,18 @@
     <div class="product-grid">
         {% for item in cart_products %}
             <div class="card">
-                <img src="{{ url_for('static', filename='images/' + item.image) }}">
+                <img src="{{ url_for('static', filename='images/' + item.['image']) }}">
                 <h3>{{ item.name }}</h3>
-                <p>Price: ${{ item.price }}</p>
+                <p>Price: ₹{{ item.price }}</p>
                 <p>Quantity: {{ item.qty }}</p>
-                <p><strong>Subtotal: ${{ item.subtotal }}</strong></p>
+                <p><strong>Subtotal: ₹{{ item.subtotal }}</strong></p>
 
                 <a class="btn-cart" href="/remove_from_cart/{{ item.name }}">Remove</a>
             </div>
         {% endfor %}
     </div>
 
-    <h2 style="text-align:center;">Total: ${{ total }}</h2>
+    <h2 style="text-align:center;">Total: ₹{{ total }}</h2>
 {% else %}
    <p style="text-align:center;">Your cart is empty</p>
 {% endif %}

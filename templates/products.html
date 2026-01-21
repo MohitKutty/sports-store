@@ -18,27 +18,33 @@
 
 <h1 class="page-title">Our Products</h1>
 
-<form method="GET" action="/products" class="search-form">
+<div class="filter-bar premium">
+
+<form method="GET" class="search-form premium-form">
+
    <input
     type="text"
-    name="search"
-    placeholder="Search products..."
+    name="q"
     value="{{ query }}"
-    >
-    <button type="submit">Search</button>
-</form>
+    placeholder="Search products..."
+    class="filter-input premium-input"
+   >
    
-<form method="GET" action="/products" class="filter-form">
-   <select name="category">
+   <select name="category" class="filter-select premium-select">
        <option value="">All Categories</option>
        <option value="Outdoor" {% if category == "Outdoor" %}selected{% endif %}>Outdoor</option>
        <option value="Indoor" {% if category == "Indoor" %}selected{% endif %}>Indoor</option>
        <option value="Fitness" {% if category == "Fitness" %}selected{% endif %}>Fitness</option>
    </select>
 
-   <input type="hidden" name="q" value="{{ query }}">
-   <button type="submit">Filter</button>
+   <button type="submit" class="filter-btn premium-btn">Apply</button>
+
+   {% if query or category %}
+   <a href="/products" class="reset-btn premium-reset">Reset</a>
+   {% endif %}
 </form>
+
+</div>
 
 <div class="product-grid">
 
