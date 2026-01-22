@@ -23,7 +23,7 @@
     <div class="product-grid">
         {% for item in cart_products %}
             <div class="card">
-                <img src="{{ url_for('static', filename='images/' + item.['image']) }}">
+                <img src="{{ url_for('static', filename='images/' + item['image']) }}">
                 <h3>{{ item['name'] }}</h3>
                 <p>Price: ₹{{ item['price'] }}</p>
                 <p>Quantity: {{ item['qty'] }}</p>
