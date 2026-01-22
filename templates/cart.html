@@ -22,12 +22,12 @@
         {% for item in cart_products %}
             <div class="card">
                 <img src="{{ url_for('static', filename='images/' + item.['image']) }}">
-                <h3>{{ item.name }}</h3>
-                <p>Price: ₹{{ item.price }}</p>
-                <p>Quantity: {{ item.qty }}</p>
-                <p><strong>Subtotal: ₹{{ item.subtotal }}</strong></p>
+                <h3>{{ item['name'] }}</h3>
+                <p>Price: ₹{{ item['price'] }}</p>
+                <p>Quantity: {{ item['qty'] }}</p>
+                <p><strong>Subtotal: ₹{{ item['subtotal'] }}</strong></p>
 
-                <a class="btn-cart" href="/remove_from_cart/{{ item.name }}">Remove</a>
+                <a class="btn-cart" href="/remove_from_cart/{{ item['name'] }}">Remove</a>
             </div>
         {% endfor %}
     </div>
