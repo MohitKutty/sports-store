@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Checkout</title>
+    <link rel="stylesheet" href="/static/style.css">
+
+    <style>
+        .checkout-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+        }
+
+        @media(max-width: 900px) {
+            .checkout-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .checkout-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .checkout-card h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .checkout-input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 14px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        .checkout-input:focus {
+            border-color: #2563eb;
+            outline: none;
+        }
+
+        .section-title {
+            font-size: 20px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .payment-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .summary-box {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .summary-total {
+            font-size: 22px;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .place-order-btn {
+            width: 100%;
+            padding: 12px;
+            background: #111827;
+            color: white;
+            border-radius: 8px;
+            margin-top: 20px;
+            cursor: pointer;
+            text-align: center;
+            display: block;
+            text-decoration: none;
+        }
+
+        .place-order-btn:hover {
+            background: #0f172a;
+        }
+
+    </style>
+</head>
+<body>
+
+<header class="navbar">
+    <h2>SportsStore</h2>
+    <nav>
+        <a href="/products">Products</a>
+        <a href="/cart">Cart</a>
+    </nav>
+</header>
+
+<h1 class="page-title">Checkout</h1>
+
+<div class="checkout-container">
+
+    <!-- LEFT SIDE — FORM -->
+    <div>
+
+        <div class="checkout-card">
+            <h2>Customer Information</h2>
+            <input class="checkout-input" placeholder="Full Name">
+            <input class="checkout-input" placeholder="Email">
+            <input class="checkout-input" placeholder="Phone Number">
+        </div>
+
+        <div class="checkout-card">
+            <h2>Shipping Address</h2>
+            <input class="checkout-input" placeholder="Address Line 1">
+            <input class="checkout-input" placeholder="Address Line 2 (optional)">
+            <input class="checkout-input" placeholder="City">
+            <input class="checkout-input" placeholder="State">
+            <input class="checkout-input" placeholder="PIN Code">
+        </div>
+
+        <div class="checkout-card">
+            <h2>Payment Method</h2>
+
+            <div class="payment-option">
+                <input type="radio" name="payment" checked>
+                <label>Cash on Delivery (COD)</label>
+            </div>
+
+            <div class="payment-option">
+                <input type="radio" name="payment">
+                <label>UPI (Google Pay / PhonePe / Paytm)</label>
+            </div>
+
+            <div class="payment-option">
+                <input type="radio" name="payment">
+                <label>Credit / Debit Card</label>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- RIGHT SIDE — SUMMARY -->
+    <div class="summary-box">
+
+        <h2>Order Summary</h2>
+
+        {% for item in cart_products %}
+        <div class="summary-row">
+            <span>{{ item.name }} × {{ item.qty }}</span>
+            <span>₹{{ item.subtotal }}</span>
+        </div>
+        {% endfor %}
+
+        <hr>
+
+        <div class="summary-row">
+            <strong>Subtotal</strong>
+            <strong>₹{{ total }}</strong>
+        </div>
+
+        {% if discount > 0 %}
+        <div class="summary-row" style="color: green;">
+            <span>Discount (10%)</span>
+            <span>-₹{{ discount|round(2) }}</span>
+        </div>
+        {% endif %}
+
+        <div class="summary-total">
+            Total: ₹{{ final_total|round(2) }}
+        </div>
+
+        <a href="#" class="place-order-btn">
+            Place Order
+        </a>
+    </div>
+
+</div>
+
+</body>
+</html>

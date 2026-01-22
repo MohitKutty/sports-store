@@ -225,10 +225,56 @@ def cart():
 
     return render_template("cart.html", cart_products=cart_products, total=total)
 
+@app.route("/cart/increase/<product_name>")
+def cart_increase(product_name):
+    cart = session.get("cart", {})
+    cart[product_name] = cart.get(product_name, 0) + 1
+    session["cart"] = cart
+    return redirect(url_for("cart"))
+
+@app.route("/cart/decrease/<product_name>")
+def cart_decrease(product_name):
+    cart = session.get("cart", {})
+    if product_name in cart:
+        cart[product_name] -= 1
+        if cart[product_name] <= 0:
+            del cart[product_name]
+    session["cart"] = cart
+    return redirect(url_for("cart"))
+
+@app.route("/checkout")
+def checkout():
+    cart = session.get("cart", {})
+    cart_products = []
+    total = 0
+
+    for name, qty in cart.items():
+        for product in get_products():
+            if product["name"] == name:
+                item = dict(product)
+                item["qty"] = qty
+                item["subtotal"] = qty * product["price"]
+                total += item["subtotal"]
+                cart_products.append(item)
+
+    if "coupon" in session and session["coupon"] == "SPORTS10":
+        discount = total * 0.10
+    else:
+        discount = 0
+
+    final_total = total - discount
+
+    return render_template(
+        "checkout.html",
+        cart_products=cart_products,
+        total=total,
+        discount=discount,
+        final_total=final_total
+    )
+
 # --------------------------------------------------
 # Admin Routes
 # --------------------------------------------------
-
 @app.route("/admin")
 @admin_required
 def admin():
