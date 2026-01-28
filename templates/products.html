@@ -55,6 +55,7 @@
             <p class="category">{{ item.category }}</p>
             <p class="price">₹{{ item.price }}</p>
             <a class="btn-cart" href="/add_to_cart/{{ item.name }}">Add to Cart</a>
+            <a href="/add_to_cart/{{ p.name }}" onclick="showToast()">Add to Cart</a>
         </div>
     {% endfor %}
 

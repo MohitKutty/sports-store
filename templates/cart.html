@@ -128,6 +128,8 @@
 </head>
 <body>
 
+<div id="CartOverlay" class="cart-overlay" onclick="toggleCart()"></div>
+
 <header class="navbar">
    <h2>SportsStore</h2>
    <nav>
@@ -135,6 +137,10 @@
        <a href="/products">Products</a>
        <a href="/cart">Cart</a>   
    </nav>
+
+   <button class="cart-toggle-btn" onclick="toggleCart()">
+       🛒 Cart <span id="cart-count">{{ cart_products|length }}</span>
+   </button>
 </header>
 
 <div class="cart-wrapper">
@@ -188,6 +194,76 @@
 {% endif %}
 
 </div>
+
+<div id="cartSidebar" class="cart-sidebar">
+
+   <div class="cart-header-slide">
+       <h2>Your Cart</h2>
+       <button class="close-btn" onclick="toggleCart()">✕</button>
+    </div>
+
+    <div class="cart-items">
+        {% if cart_products %}
+            {% for item in cart_products %}
+            <div class="cart-item-slide">
+                <img src="{{ url_for('static', filename='images/' + item['image']) }}">
+
+                <div class="cart-info-slide">
+                    <h4>{{ item['name'] }}</h4>
+                    <p>₹{{ item['price'] }} × {{ item['qty'] }}</p>
+                    <p class="subtotal">Subtotal: ₹{{ item['subtotal'] }}</p>
+                
+                    <div class="qty-box-slide">
+                        <a href="/cart/decrease/{{ item['name'] }}" class="qty-btn-slide">-</a>
+                        <span>{{ item['qty'] }}</span>
+                        <a href="/cart/increase/{{ item['name'] }}" class="qty-btn-slide">+</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+            
+        <div class="side-total">
+            Total: ₹{{ total }}
+        </div>
+
+        <a href="/checkout" class="checkout-btn-slide">Checkout</a>
+
+     {% else %}
+        <p class="empty-slide">Your cart is empty 🛒</p>
+     {% endif %}
+  </div>
+</div>
+
+<script>
+function toggleCart() {
+    const sidebar = document.getElementById('cartSidebar');
+    const overlay = document.getElementById('CartOverlay');
+
+    const isOpen = sidebar.classList.contains('open');
+
+    if (isOpen) {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('open');
+    } else {
+        sidebar.classList.add('open');
+        overlay.classList.add('open');
+    }
+}
+</script>
+
+<div class="floating-cart-btn" onclick="toggleCart()">
+    🛒 <span id="floating-cart-count">{{ cart_products|length }}</span>
+</div>
+
+<div id="toast" class="toast">Added to cart ✓</div>
+
+<script>
+function showToast() {
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(() => { t.classList.remove('show'); }, 1800);
+}
+</script>
 
 </body>
 </html>
