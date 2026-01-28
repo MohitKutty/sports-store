@@ -226,20 +226,26 @@ def cart():
     return render_template("cart.html", cart_products=cart_products, total=total)
 
 @app.route("/cart/increase/<product_name>")
-def cart_increase(product_name):
-    cart = session.get("cart", {})
-    cart[product_name] = cart.get(product_name, 0) + 1
+def increase_qty(product_name):
+    
+    if product_name in cart:
+        cart[product_name] += 1
+        
     session["cart"] = cart
+    session.modified = True
     return redirect(url_for("cart"))
 
 @app.route("/cart/decrease/<product_name>")
-def cart_decrease(product_name):
+def decrease_qty(product_name):
     cart = session.get("cart", {})
+    
     if product_name in cart:
         cart[product_name] -= 1
         if cart[product_name] <= 0:
             del cart[product_name]
+    
     session["cart"] = cart
+    session.modified = True
     return redirect(url_for("cart"))
 
 @app.route("/checkout")

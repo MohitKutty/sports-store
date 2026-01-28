@@ -3,11 +3,133 @@
 <head>
    <title>Your Cart</title>
    <link rel="stylesheet" href="/static/style.css">
+
+   <style>
+       body {
+           background: #f5f7fa;
+       }
+
+       .cart-wrapper {
+           max-width: 960px;
+           margin: 40px auto;
+           padding: 20px;
+       }
+
+       .cart-header {
+           display: flex;
+           justify-content: space-between;
+           align-items: center;
+           margin-bottom: 20px;
+       }
+
+       .cart-header h1 {
+           margin: 0;
+           font-size: 30px;
+           font-weight: 700;
+       }
+
+       .cart-container {
+           background: white;
+           padding: 25px;
+           border-radius: 14px;
+           box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+       }
+
+       .cart-item {
+           display: flex;
+           align-items: center;
+           gap: 20px;
+           padding: 18px 0;
+           border-bottom: 1px solid #e5e7eb;
+       }
+
+       .cart-item:last-child {
+           border-bottom: none;
+       }
+
+       .cart-item img {
+           width: 110px;
+           height: 110px;
+           object-fit: contain;
+           background: #f1f1f1;
+           padding: 10px;
+           border-radius: 10px;
+       }
+
+       .cart-info {
+           flex-grow: 1;
+       }
+
+       .cart-info h3 {
+           margin: 0;
+           font-size: 20px;
+           font-weight: 600;
+       }
+
+       .cart-info p {
+           margin: 6px 0;
+           color: #555;
+       }
+
+       .subtotal-label {
+           font-weight: 600;
+           color: black;
+       }
+
+       .remove-btn {
+           padding: 8px 14px;
+           background: #ef4444;
+           color: white;
+           border-radius: 8px;
+           font-size: 14px;
+           text-decoration: none;
+           transition: background .2s;
+       }
+
+       .remove-btn:hover {
+           background: #dc2626;
+       }
+
+       .checkout-section {
+           text-align: right;
+           margin-top: 35px;
+       }
+
+       .cart-total {
+           font-size: 24px;
+           font-weight: 700;
+           margin-bottom: 15px;
+       }
+
+       .checkout-btn {
+           background: #2563eb;
+           color: white;
+           padding: 14px 26px;
+           font-size: 17px;
+           font-weight: 600;
+           text-decoration: none;
+           border-radius: 10px;
+           transition: background .25s, transform .15s;
+           display: inline-block;
+       }
+
+       .checkout-btn:hover {
+           background: #1e40af;
+           transform: translateY(-2px);
+       }
+
+       .empty-cart {
+           text-align: center;
+           padding: 60px 0;
+           font-size: 18px;
+           color: #666;
+       }
+   </style>
 </head>
 <body>
 
 <header class="navbar">
-   <h2> SportsStore</h2>
+   <h2>SportsStore</h2>
    <nav>
        <a href="/">Home</a>
        <a href="/products">Products</a>
@@ -15,29 +137,57 @@
    </nav>
 </header>
 
-<h1 class="page-title">Your Cart</h1>
-
-<a href="/checkout" class="place-order-btn">Proceed to Checkout</a>
+<div class="cart-wrapper">
 
 {% if cart_products %}
-    <div class="product-grid">
-        {% for item in cart_products %}
-            <div class="card">
-                <img src="{{ url_for('static', filename='images/' + item['image']) }}">
-                <h3>{{ item['name'] }}</h3>
-                <p>Price: ₹{{ item['price'] }}</p>
-                <p>Quantity: {{ item['qty'] }}</p>
-                <p><strong>Subtotal: ₹{{ item['subtotal'] }}</strong></p>
 
-                <a class="btn-cart" href="/remove_from_cart/{{ item['name'] }}">Remove</a>
+    <div class="cart-header">
+        <h1>Your Cart</h1>
+        <span style="color:#666;">{{ cart_products|length }} items</span>
+    </div>
+
+    <div class="cart-container">
+        {% for item in cart_products %}
+        <div class="cart-item">
+            
+            <img src="{{ url_for('static', filename='images/' + item['image']) }}"
+                 onerror="this.src='/static/images/placeholder.png'">
+
+            <div class="cart-info">
+                <h3>{{ item['name'] }}</h3>
+                <p>₹{{ item['price'] }} × {{ item['qty'] }}</p>
+
+                <div class="cart-qty-box">
+                    <a class="qty-btn" href="/decrease_qty/{{ item['name'] }}">-</a>
+                    <span class="qty-display">{{ item['qty'] }}</span>
+                    <a class="qty-btn" href="/increase_qty/{{ item['name'] }}">+</a>
+                </div>
+
+                <p class="subtotal-label">Subtotal: ₹{{ item['subtotal'] }}</p>
             </div>
+
+            <a class="remove-btn" href="/remove_from_cart/{{ item['name'] }}">
+                Remove
+            </a>
+
+        </div>
         {% endfor %}
     </div>
 
-    <h2 style="text-align:center;">Total: ₹{{ total }}</h2>
+    <div class="checkout-section">
+        <div class="cart-total">Total: ₹{{ total }}</div>
+        <a href="/checkout" class="checkout-btn">Proceed to Checkout</a>
+    </div>
+
 {% else %}
-   <p style="text-align:center;">Your cart is empty</p>
+
+    <div class="empty-cart">
+        <p>Your cart is empty 🛒</p>
+    </div>
+
 {% endif %}
+
+</div>
 
 </body>
 </html>
